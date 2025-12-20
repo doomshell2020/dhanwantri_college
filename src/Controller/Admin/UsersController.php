@@ -417,4 +417,63 @@ class UsersController extends AppController
 
         $this->set('users', $users);
     }
+
+    public function viewboard($id = null)
+    {
+         $this->viewBuilder()->layout('admin');
+        $this->loadModel('Board');
+
+        if (!empty($id)) {
+            $board = $this->Board->get($id);
+            $this->set('users_data', $board);
+        } 
+
+        // Handle form submission
+        if ($this->request->is(['post', 'put'])) {
+            $data = $this->request->data;
+
+            // Handle logo upload
+            if (!empty($data['logo']['tmp_name'])) {
+                $ext = pathinfo($data['logo']['name'], PATHINFO_EXTENSION);
+                $filename = $data['name'] . $ext;
+                $targetPath = WWW_ROOT . $filename;
+                move_uploaded_file($data['logo']['tmp_name'], $targetPath);
+                $data['logo'] = $filename;
+            } else {
+                if (!empty($id)) {
+                    $data['logo'] = $board->logo; // Keep old logo on edit
+                }
+            }
+
+            // Handle transparent logo upload
+            if (!empty($data['transparent_logo']['tmp_name'])) {
+                $ext = pathinfo($data['transparent_logo']['name'], PATHINFO_EXTENSION);
+                $filename = 'transparent_logo_' . time() . '.' . $ext;
+                $targetPath = WWW_ROOT . 'uploads' . DS . $filename;
+                move_uploaded_file($data['transparent_logo']['tmp_name'], $targetPath);
+                $data['transparent_logo'] = $filename;
+            } else {
+                if (!empty($id)) {
+                    $data['transparent_logo'] = $board->transparent_logo; // Keep old on edit
+                }
+            }
+
+            if (!empty($id)) {
+                $board = $this->Board->patchEntity($board, $data);
+            } else {
+                $board = $this->Board->patchEntity($this->Board->newEntity(), $data);
+            }
+
+            if ($this->Board->save($board)) {
+                $this->Flash->success(__('Board data has been saved successfully.'));
+                return $this->redirect(['action' => 'viewboard']);
+            } else {
+                $this->Flash->error(__('Unable to save board data. Please try again.'));
+            }
+        }
+
+        // Fetch all boards for table display
+        $boards = $this->Board->find('all')->order(['id' => 'DESC'])->toArray();
+        $this->set('branches_data', $boards);
+    }
 }
