@@ -1,0 +1,596 @@
+<?php 
+class xtcpdf extends TCPDF {
+}
+ 
+define("MAJOR", 'Rupees Only');
+define("MINOR", '');
+class toWords
+{
+    var $pounds;
+    var $pence;
+    var $major;
+    var $minor;
+    var $words = '';
+    var $number;
+    var $magind;
+       var $units = array('', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine');
+    var $teens = array('Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen');
+    var $tens = array('', 'Ten', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety');
+    var $mag = array('', 'Thousand', 'Million', 'Billion', 'Trillion');
+
+    function toWords($amount, $major = MAJOR, $minor = MINOR)
+    {
+        $this->__toWords__((int)($amount), $major);
+        $whole_number_part = $this->words;
+        #$right_of_decimal = (int)(($amount-(int)$amount) * 100);
+        $strform = number_format($amount,2);
+        $right_of_decimal = (int)substr($strform, strpos($strform,'.')+1);
+        $this->__toWords__($right_of_decimal, $minor);
+        $this->words = $whole_number_part . ' ' . $this->words;
+    }
+
+    function __toWords__($amount, $major)
+    {
+        $this->major  = $major;
+        #$this->minor  = $minor;
+        $this->number = number_format($amount, 2);
+        list($this->pounds, $this->pence) = explode('.', $this->number);
+        $this->words = " $this->major";
+        if ($this->pounds == 0)
+            $this->words = "$this->words";
+        else {
+            $groups = explode(',', $this->pounds);
+            $groups = array_reverse($groups);
+            for ($this->magind = 0; $this->magind < count($groups); $this->magind++) {
+                if (($this->magind == 1) && (strpos($this->words, 'Hundred') === false) && ($groups[0] != '000'))
+                    $this->words = ' And ' . $this->words;
+                $this->words = $this->_build($groups[$this->magind]) . $this->words;
+            }
+        }
+    }
+
+    function _build($n)
+    {
+        $res = '';
+        $na  = str_pad("$n", 3, "0", STR_PAD_LEFT);
+        if ($na == '000')
+            return '';
+        if ($na{0} != 0)
+            $res = ' ' . $this->units[$na{0}] . ' Hundred';
+        if (($na{1} == '0') && ($na{2} == '0'))
+            return $res . ' ' . $this->mag[$this->magind];
+        $res .= $res == '' ? '' : ' And';
+        $t = (int) $na{1};
+        $u = (int) $na{2};
+        switch ($t) {
+            case 0:
+                $res .= ' ' . $this->units[$u];
+                break;
+            case 1:
+                $res .= ' ' . $this->teens[$u];
+                break;
+            default:
+                $res .= ' ' . $this->tens[$t] . ' ' . $this->units[$u];
+                break;
+        }
+        $res .= ' ' . $this->mag[$this->magind];
+        return $res;
+    }
+}
+
+// create new PDF document
+$pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, 'A5', true, 'UTF-8', false);
+
+
+
+// set default header data
+$pdf->SetPrintHeader(false);
+$pdf->SetPrintFooter(false);
+// set header and footer fonts
+//$pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+//$pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+// set default monospaced font
+$pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+// set margins
+$pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT, PDF_MARGIN_BOTTOM);
+//$pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+//$pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+// set auto page breaks
+$pdf->SetAutoPageBreak(TRUE, 0);
+
+// set image scale factor
+$pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+// set some language-dependent strings (optional)
+if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
+	require_once(dirname(__FILE__).'/lang/eng.php');
+	$pdf->setLanguageArray($l);
+}
+
+// ---------------------------------------------------------
+
+// set font
+$pdf->SetFont('', '', 7, '', 'false');
+//$pdf->SetFont('arial', '', 9, '', 'true');
+// add a page
+$pdf->SetMargins(5, 3, 5, true);
+//~ $pdf->AddPage('P', 'A5');
+
+
+if($studentfees['status']=='N'){
+
+// -- set new background ---
+
+// get the current page break margin
+$bMargin = $pdf->getBreakMargin();
+// get current auto-page-break mode
+$auto_page_break = $pdf->getAutoPageBreak();
+// disable auto-page-break
+$pdf->SetAutoPageBreak(false, 0);
+// set bacground image
+$img_file = WWW_ROOT.'images/cancelled.png';
+
+$pdf->Image($img_file, 45, 80, 70, 70, '', '', '', false, 300, '', false, false, 0);
+// restore auto-page-break status
+$pdf->SetAutoPageBreak($auto_page_break, $bMargin);
+// set the starting point for the page content
+$pdf->setPageMark();
+}
+
+for($i=0;$i<2;$i++){
+	
+	$pdf->AddPage('P', 'A5');
+$html.='
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Receipt</title><link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">';
+
+$html.='</head>
+<body>
+<table width="100%" align="center">
+<tr>
+<td width="33.3333%"></td>
+<td width="33.3333%" align="center">Sri Sai Shikshan Sansthan</td>
+<td width="33.3333%" align="right">
+<table width="100%" cellpadding="2px">
+<tr>
+<td width="60%"></td>';
+if($studentfees['mode']=='CHEQUE' ){ 
+	
+	
+$html.='<td width="40%" style="border:1px solid #000;" align="center"><a href="javascript:void(0);" style="text-decoration:none; color:#000; width:100px; display:inline-block; border-top:1px solid #000;  border-left:1px solid #000;  border-right:1px solid #000;  border-bottom:1px solid #000;"><strong>CHEQUE</strong></a></td>';
+
+
+}else if($studentfees['mode']=='DD'){
+	
+$html.='<td width="40%" style="border:1px solid #000;" align="center"><a href="javascript:void(0);" style="text-decoration:none; color:#000; width:100px; display:inline-block; border-top:1px solid #000;  border-left:1px solid #000;  border-right:1px solid #000;  border-bottom:1px solid #000;"><strong>DD</strong></a></td>';	
+	
+	
+	
+}else if($studentfees['mode']=='NETBANKING'){
+$html.='<td width="50%" style="border:1px solid #000;" align="center"><a href="javascript:void(0);" style="text-decoration:none; color:#000; width:100px; display:inline-block; border-top:1px solid #000;  border-left:1px solid #000;  border-right:1px solid #000;  border-bottom:1px solid #000;"><strong>NETBANKING</strong></a></td>';	
+	
+	
+	
+}else if($studentfees['mode']=='CREDIT CARD/DEBIT CARD'){
+$html.='<td width="50%" style="border:1px solid #000;" align="center"><a href="javascript:void(0);" style="text-decoration:none; color:#000; width:100px; display:inline-block; border-top:1px solid #000;  border-left:1px solid #000;  border-right:1px solid #000;  border-bottom:1px solid #000;"><strong> CREDIT CARD /<br>DEBIT CARD </strong></a></td>';	
+	
+	
+
+}else if($studentfees['mode']=='CASH'){
+$html.='<td width="40%" style="border:1px solid #000;" align="center"><a href="javascript:void(0);" style="text-decoration:none; color:#000; width:100px; display:inline-block; border-top:1px solid #000;  border-left:1px solid #000;  border-right:1px solid #000;  border-bottom:1px solid #000;"><strong>CASH</strong></a></td>';	
+	
+	
+}
+$html.='</tr>
+</table></td>
+</tr>
+<tr>
+<td colspan="3" align="center"><img src="images/logo.png" alt="" border="0" style=" width: 150px; height:70px; display:block;">
+</td>
+</tr>';
+if($students['board_id']=='1'){ 
+$html.='<tr>
+<td colspan="3" align="center">Aff. No. 1730236 <br>Affiliated C.B.S.E. Delhi</td>
+</tr>';
+}else{
+	$html.='<tr>
+<td colspan="3" align="center"><br></td>
+</tr>';
+	
+}
+
+$html.='<tr>
+<td width="60%"><span style="text-align:left; display:inline-block; font-size:11px;">Vishwamitra Marg, Defence Colony <br>Sirsi Road, Jaipur (Rajasthan) 302012</span></td>
+
+<td align="right" width="40%" style="font-size:11px;"><br><br><span>Ph. No.: 2246189, 2357844</span> &nbsp;  &nbsp; </td>
+</tr>
+</table>
+<br><br>
+<table width="100%" cellspacing="1" >
+<tr>
+<th colspan="4" style="line-height:17px; font-weight:bold; text-align:center; font-size:15px; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; border-right:1px solid #000; text-transform:uppercase;" height="25px">
+<strong>RECIEPT SESSION: '.$studentfees['acedmicyear'].'</strong>
+</th>
+</tr>
+<tr style="font-size:12px;">
+<td width="20%" style=" line-height:14px; height:14px;border-left:1px solid #000;">&nbsp; Receipt No.</td>
+<td width="40%" style="line-height:14px; height:14px;">:&nbsp; '.$studentfees['recipetno'].'</td>
+<td width="12%" style="line-height:14px; height:14px;">Date</td>
+<td width="28%" style="line-height:14px; height:14px;border-right:1px solid #000;">:&nbsp; '.date('d-m-Y',strtotime($studentfees['paydate'])).'&nbsp;</td>
+</tr>
+<tr style="font-size:12px;">
+<td width="20%" style="line-height:14px; height:14px;border-left:1px solid #000;">&nbsp; Name</td>
+<td width="40%" style="line-height:14px; height:14px;"><p>:&nbsp; '.strtoupper(ucwords($students['fee_submittedby'])).'</p></td>
+<td width="12%" style="line-height:14px; height:14px;">Class</td>
+<td width="28%" style="line-height:14px; height:14px;border-right:1px solid #000; text-transform:uppercase;">:&nbsp; '.$students['class']['title'].'-'.$students['section']['title'].'</td>
+</tr>
+<tr style="font-size:12px;">';
+$n="&nbsp;Pupil's Name";
+$html.='<td width="20%" style="border-left:1px solid #000;line-height:14px; height:14px;">&nbsp;'.$n.' </td>
+<td width="40%" style="text-transform:uppercase;line-height:14px; height:14px;">:&nbsp;&nbsp;'.strtoupper(ucwords($students['fname'])).' '.strtoupper(ucwords($students['middlename'])).' '.strtoupper(ucwords($students['lname'])).'</td>
+<td width="12%" style="line-height:14px; height:14px;">Sr. No.</td>
+<td width="28%" style="border-right:1px solid #000;line-height:14px; height:14px;">:&nbsp; '.$students['enroll'].'</td>
+</tr>
+<tr>
+<td colspan="4" style="padding:0px;">
+<table cellspacing="0" width="100%" cellpadding="1px">
+<tr style="font-size:12px;">
+<td width="8%" style="line-height:14px; text-align:center;height:14px;border-top:1px solid #000; border-left:1px solid #000; border-bottom:1px solid #000;">&nbsp; S.No.</td>
+<td width="64%"  style="line-height:14px; text-align:left; height:14px;border-top:1px solid #000; border-left:1px solid #000; border-bottom:1px solid #000;">&nbsp; Particulars</td>
+<td width="28%"  style="line-height:14px; text-align:right; height:14px;border-top:1px solid #000; border-left:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; text-align:right;">Amount &nbsp; &nbsp; </td>
+</tr>';
+
+
+
+
+$count=1; $fees=0; $j=0;  
+	$rtt=0;
+ if($studentfees['refrencepending']=='0'){
+							$quas=unserialize($studentfees['quarter']);
+							
+							$arr=array();
+						
+
+foreach($quas as $iteam['quarter']=>$iteam['amount']){
+	
+
+if($iteam['quarter']!='Caution Money'){
+
+
+if($iteam['quarter']=='Admission Fee'){
+	 
+	 
+	  $fees=$iteam['amount'];
+	  	 $iteam['quarter']="Admission Fee";
+	  	 $lastdatemonthw=date('M',strtotime($rg['qu1_date']));
+	 
+	 }else if($iteam['quarter']=='Development Fee'){
+	 
+	$fees=$iteam['amount'];
+	 $iteam['quarter']="Development Fee";
+	 $lastdatemonthw=date('M',strtotime($rg['qu1_date']));
+	 }else if($iteam['quarter']=='Quater1'){
+	 $rtt='1';
+	$fees=$iteam['amount'];
+	 $iteam['quarter']="Tuition Fee (APRIL-JUNE)";
+	 
+	  $rg=$this->Comman->findclassfee($students['class']['id'],$studentfees['acedmicyear']); 
+	  $lastdatemonth=date('Y-m-d',strtotime($rg['qu1_date']));
+	   $lastdatemonthw=date('M',strtotime($rg['qu2_date']));
+	 }else if($iteam['quarter']=='Quater2'){
+	  $rtt='1';
+	$fees=$iteam['amount'];
+	 $iteam['quarter']="Tuition Fee (JULY-SEPT.)";
+	   $rg=$this->Comman->findclassfee($students['class']['id'],$studentfees['acedmicyear']); 
+	  $lastdatemonth=date('Y-m-d',strtotime($rg['qu2_date']));
+	  $lastdatemonthw=date('M',strtotime($rg['qu3_date']));
+	 }else if($iteam['quarter']=='Quater3'){
+	  $rtt='1';
+	$fees=$iteam['amount'];
+	 $iteam['quarter']="Tuition Fee (OCT.-DEC.)";
+	   $rg=$this->Comman->findclassfee($students['class']['id'],$studentfees['acedmicyear']); 
+	  $lastdatemonth=date('Y-m-d',strtotime($rg['qu3_date']));
+	   $lastdatemonthw=date('M',strtotime($rg['qu4_date']));
+	 }else if($iteam['quarter']=='Quater4'){
+	  $rtt='1';
+	$fees=$iteam['amount'];
+	 $iteam['quarter']="Tuition Fee (JAN.-MARCH)";
+	   $rg=$this->Comman->findclassfee($students['class']['id'],$studentfees['acedmicyear']); 
+	  $lastdatemonth=date('Y-m-d',strtotime($rg['qu4_date']));
+	  
+	  $aee=['17','20','22','27'];
+	 if(!in_array($students['class_id'],$aee)){
+	  $lastdatemonthw="Apr";
+	
+	     }
+	 }else if($iteam['quarter']=='Miscellaneous Fee'){
+	 
+	$fees=$iteam['amount'];
+	 $iteam['quarter']="Miscellaneous Fee";
+	   $rg=$this->Comman->findclassfee($students['class']['id'],$studentfees['acedmicyear']); 
+	  $lastdatemonth=date('Y-m-d',strtotime($rg['qu1_date']));
+	 }else if($iteam['quarter']){
+	 
+
+	$iteam['quarter']=str_replace('"', "", $iteam['quarter']);
+	
+	
+ $findpending=$this->Comman->findpendingrefrencefee($iteam['quarter'],$iteam['amount']); 
+
+ if($findpending){
+	$iteam['quarter']="Pending Receipt (Reference No ".$findpending['recipetnos'].")";
+	  $fees=$iteam['amount'];
+ }else{
+ 
+  $fees=$iteam['amount'];
+ }
+	   $rg=$this->Comman->findclassfee($students['class']['id'],$studentfees['acedmicyear']); 
+	//  $lastdatemonth=date('Y-m-d',strtotime($rg['qu1_date']));
+	 }else{
+		 
+		 $fees=$iteam['amount'];
+		 }
+
+
+
+$j+=$fees;
+
+
+
+if($fees){ 
+
+$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:center;">'.$count++.'</td>
+<td style="line-height:14px; height:14px;text-transform:uppercase; border-left:1px solid #000;">&nbsp;  '.$iteam['quarter'].'</td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;">'.number_format($fees,2).'&nbsp; &nbsp; </td>
+</tr>'; 
+}
+}
+
+}
+
+}else{
+
+		$fees=$studentfees['fee'];
+	 $iteam['quarter']=$studentfees['quarter'];
+	   $rg=$this->Comman->findclassfee($students['class']['id'],$studentfees['acedmicyear']); 
+	  $lastdatemonth=date('Y-m-d',strtotime($rg['qu1_date']));
+	
+	$j+=$fees;
+if($fees){ 
+$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:center;">'.$count++.'</td>
+<td style="line-height:14px; height:14px;text-transform:uppercase; border-left:1px solid #000;">&nbsp;  '.$iteam['quarter'].'</td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;">'.number_format($fees,2).'&nbsp; &nbsp; </td>
+</tr>'; 
+}
+	
+	
+}
+
+ 
+
+$t=14;
+	
+for ($x = $count; $x <= $t; $x++) {
+	
+	$html.='<tr style="font-size:12px;">
+<td style="line-height:18px; height:18px;border-left:1px solid #000; text-align:center;">&nbsp;</td>
+<td style="line-height:18px; height:18px;text-transform:uppercase; border-left:1px solid #000;">&nbsp;</td>
+<td style="line-height:18px; height:18px;border-left:1px solid #000; border-right:1px solid #000;">&nbsp;</td>
+</tr>';
+	
+}
+
+
+
+
+$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right; border-top:1px solid #000;" colspan="2">Total Fees Rs.: &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right; border-top:1px solid #000;">'.number_format($j,2).' &nbsp; &nbsp; </td>
+</tr>';
+
+$lfine=$studentfees['lfine'];
+if($lfine!=0.00 ){
+	
+
+$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right;" colspan="2">(+) Late Fee: &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;">&nbsp;&nbsp;'.number_format($lfine,2).' &nbsp; &nbsp; </td>
+</tr>';
+
+}else{
+	
+	$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right;" colspan="2">(+) Late Fee : &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;"> 0.00 &nbsp; &nbsp; </td>
+</tr>';
+	
+	
+}
+
+$dueamt=$this->Comman->findpendingrefrencefees23($studentfees['id']);
+if($dueamt){
+$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right;" colspan="2">(-) Due Amount Rs.: &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;">'.number_format($dueamt['amt'],2).' &nbsp; &nbsp; </td>
+</tr>';
+}else{
+	$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right;" colspan="2">(-) Due Amount Rs.: &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;">0.00 &nbsp; &nbsp; </td>
+</tr>';
+	
+	
+}
+
+
+$discount_fees=$studentfees['discount'];
+$addtionaldiscount_fees=$studentfees['addtionaldiscount'];
+$deposite_amt=$studentfees['deposite_amt'];
+
+if($discount_fees>0){
+	$netamount =$discount_fees; $remain=$j-$netamount;
+	$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right;" colspan="2">(-) Discount: &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;">'.number_format($netamount,2).' &nbsp; &nbsp; </td>
+</tr>';
+
+
+}else{
+	$remain=$j;
+	$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right;" colspan="2">(-) Discount: &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;">0.00 &nbsp; &nbsp; </td>
+</tr>';
+
+	
+	
+	
+}
+
+if($addtionaldiscount_fees>0 || $addtionaldiscount_fees!=0 ){
+	
+$remain=$remain-$addtionaldiscount_fees;
+$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right;" colspan="2">(-) Additonal Discount (if any): &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;">'.number_format($addtionaldiscount_fees,2).' &nbsp; &nbsp; </td>
+</tr>';
+
+}else{
+	
+	$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right;" colspan="2">(-) Additonal Discount (if any): &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; text-align:right;">0.00  &nbsp; &nbsp; </td>
+</tr>';
+	
+	
+}
+
+if($deposite_amt || $deposite_amt=='0'){
+	
+	$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right; font-weight:bold;" colspan="2"><strong>Net Deposited Rs.: </strong>&nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; font-weight:bold; text-align:right;">'.number_format($deposite_amt,2).' &nbsp; &nbsp;  </td>
+</tr>';
+$obj    = new toWords($deposite_amt);
+$w=$obj->words;
+	
+	
+	
+
+}else{
+	
+$html.='<tr style="font-size:12px;">
+<td style="line-height:14px; height:14px;border-left:1px solid #000; text-align:right; font-weight:bold;" colspan="2">Net Deposited Rs.: &nbsp; &nbsp; </td>
+<td style="line-height:14px; height:14px;border-left:1px solid #000; border-right:1px solid #000; font-weight:bold; text-align:right;">'.number_format($j,2).'&nbsp; &nbsp;  </td>
+</tr>';	
+$obj    = new toWords($j);
+$w=$obj->words;
+	
+	
+}
+$html.='<tr style="font-size:10px;">
+<td colspan="3" style="line-height:14px; height:14px;border-top:1px solid #000; border-left:1px solid #000; border-right:1px solid #000;">&nbsp;  
+'.$w.'
+</td>
+</tr>
+<tr>
+<td colspan="3" style="line-height:14px; height:14px;border-top:1px solid #000; border-left:1px solid #000; border-right:1px solid #000; border-bottom:1px solid #000;">';
+
+
+if($studentfees['mode']=='CHEQUE' ){ 
+$html.='&nbsp; <span>Paid by Chq.No. : '.$studentfees['cheque_no'].' 
+Dt: '.date('d-m-Y',strtotime($studentfees['paydate'])).' && Bank Name : '.$studentfees['bank'].'<br></span>';
+}else if($studentfees['mode']=='DD'){
+$html.='&nbsp; <span>Paid by DD No. : '.$studentfees['cheque_no'].' 
+Dt: '.date('d-m-Y',strtotime($studentfees['paydate'])).' && Bank Name : '.$studentfees['bank'].'<br></span>';	
+	
+	
+	
+}else if($studentfees['mode']=='NETBANKING'){
+$html.='&nbsp; <span>Paid by Netbanking Refrence No.: 
+'.$studentfees['ref_no'].' Dt: '.date('d-m-Y',strtotime($studentfees['paydate'])).'<br></span>';	
+	
+	
+	
+}else if($studentfees['mode']=='CREDIT CARD/DEBIT CARD'){
+$html.='&nbsp; <span>Paid by Credit/Debit Card Refrence No.: 
+'.$studentfees['ref_no'].' Dt: '.date('d-m-Y',strtotime($studentfees['paydate'])).'<br></span>';	
+	
+	
+	
+}else if($studentfees['mode']=='CASH'){
+$html.='&nbsp; <span>Paid by Cash Dt: '.date('d-m-Y',strtotime($studentfees['paydate'])).'<br></span>';	
+	
+	
+	
+}
+if($rtt=='1'){
+$dateg=date('M', strtotime("+3 months", strtotime($lastdatemonth)));
+
+if($lastdatemonthw){
+	
+	$html.='<span>&nbsp;&nbsp;Next Due on 10, '.$lastdatemonthw.' after Due Date Rs. 10 per day fine will be charged.</span><span>&nbsp;&nbsp;Amount once deposited will not be refunded.<br> &nbsp;Remarks: '.$studentfees['remarks'].'</span>';
+	
+}else{
+	$html.='<span>&nbsp;&nbsp;Amount once deposited will not be refunded.<br> &nbsp;Remarks: '.$studentfees['remarks'].'</span>';
+	
+}
+
+}else{
+$html.='<span>&nbsp;&nbsp;Amount once deposited will not be refunded.<br> &nbsp;Remarks: '.ucfirst(strtolower($studentfees['remarks'])).'</span>';
+
+
+}
+$html.='
+</td>
+</tr>
+<tr>
+<td colspan="3" style="text-align:right;line-height:14px; height:14px;">
+</td></tr>
+<tr style="font-size:12px;">
+<td colspan="3" style="text-align:right;line-height:10px; height:14px;">';
+
+$nh="Reciever's Signature";
+
+ $html.=$nh.'&nbsp;  &nbsp; 
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</body>
+</html>';
+
+$pdf->writeHTML($html, true, 0, true, 0);
+
+
+}
+if($gid!=1){
+	
+	// force print dialog
+$js .= 'print(true);';
+
+// set javascript
+$pdf->IncludeJS($js);
+	
+}
+
+// ---------------------------------------------------------
+
+//Close and output PDF document
+ob_clean();
+$pdf->Output('Receipt.pdf');
+exit;
+?>
+
+
+

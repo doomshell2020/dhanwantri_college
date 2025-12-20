@@ -1,0 +1,48 @@
+<div id="results">Your captured image will appear here...</div>
+	
+	<h1>WebcamJS Test Page</h1>
+	<h3>Demonstrates simple 320x240 capture &amp; display</h3>
+	
+	<div id="my_camera"></div>
+	
+	<!-- First, include the Webcam.js JavaScript Library -->
+<?= $this->Html->script('admin/webcam.js') ?>
+	
+	<!-- Configure a few settings and attach camera -->
+	<script language="JavaScript">
+		Webcam.set({
+			width: 320,
+			height: 240,
+			image_format: 'jpeg',
+			jpeg_quality: 90
+		});
+		Webcam.attach( '#my_camera' );
+	</script>
+	
+	<!-- A button for taking snaps -->
+	<form>
+		<input type=button value="Take Snapshot" onClick="take_snapshot()">
+	</form>
+		<!--<script language="JavaScript">
+	function take_snapshot() {//alert('test');
+		Webcam.snap
+	}	</script>-->
+Code to handle taking the snapshot and displaying it locally 
+	<script language="JavaScript">
+		function take_snapshot() {
+			// take snapshot and get image data
+			Webcam.snap( function(data_uri) {
+				
+				// display results in page
+				document.getElementById('results').innerHTML = 
+					'<h2>Here is your image:</h2>' + 
+					'<img src="'+data_uri+'"/>';
+					 Webcam.upload( data_uri, 'https://192.168.5.53/school/upload.php', function(code, text) {//alert('test');
+                                            // Upload complete!
+                                            // 'code' will be the HTTP response code from the server, e.g. 200
+                                            // 'text' will be the raw response content
+                                });
+			} );
+		}
+	</script>
+	

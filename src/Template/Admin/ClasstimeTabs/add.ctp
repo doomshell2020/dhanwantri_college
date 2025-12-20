@@ -1,0 +1,360 @@
+<div class="modal-header">
+  <button type="button" class="close" data-dismiss="modal">
+    <span aria-hidden="true">×</span><span class="sr-only">Close</span>
+  </button>
+  <h4 class="modal-title" id="modalLabel"><i class="fa fa-calendar"></i>
+    Assign Lecture - <?php echo $weekname; ?> </h4>
+  <small>
+    <strong> Class </strong> : <?php echo $classtitle; ?> </small> |
+  <small>
+    <strong> Section </strong> :
+    <?php echo $sectiontitle; ?>
+   </small> |
+</div> <!-- /.modal-header -->
+
+
+
+<script type="text/javascript">
+  $('.opt').click(function() {
+    $(".reg").prop('checked', false);
+    $('.errer').html("");
+    $('.add_field_butto').show();
+    var subn = '<?php echo $optsub; ?>';
+    var opte = '<?php echo $optemplo; ?>';
+    $('.sub1').prop('disabled', false);
+    $('.sub1').html("");
+    $('.sub1').append('<option value="' + "" + '">' + "Select Subject" + '</option>');
+    $.each(JSON.parse(subn), function(key, value) {
+      $('.sub1').append('<option value="' + key + '">' + value + '</option>');
+    });
+
+    $('.enm').html("");
+    $('.enm').append('<option value="' + "" + '">' + "Select Teacher" + '</option>');
+    $.each(JSON.parse(opte), function(key, value) {
+      $('.enm').append('<option value="' + key + '">' + value.replace(/;/g, " ") + '</option>');
+    });
+  });
+
+  $('.reg').click(function() {
+
+
+    $('.asset2').hide();
+    var subn = '<?php echo $regsub; ?>';
+    var rege = '<?php echo $regemplo; ?>';
+    $('.sub1').prop('disabled', false);
+    $('.sub1').html("");
+    $('.sub1').append('<option value="' + "" + '">' + "Select Subject" + '</option>');
+    $.each(JSON.parse(subn), function(key, value) {
+      $('.sub1').append('<option value="' + key + '">' + value + '</option>');
+    });
+    $('.enm').html("");
+    $('.enm').append('<option value="' + "" + '">' + "Select Teacher" + '</option>');
+    $.each(JSON.parse(rege), function(key, value) {
+      $('.enm').append('<option value="' + key + '">' + value.replace(/;/g, " ") + '</option>');
+    });
+
+
+  });
+</script>
+
+<?php echo $this->Form->create($timestable, array(
+  'class' => 'form-horizontal',
+  'id' => 'timestable_form',
+  'enctype' => 'multipart/form-data',
+  'validate'
+)); ?>
+<div class="modal-body">
+
+  <div id="s-id">
+    <div class="after-add-more" id="test">
+      <div class="assets_container">
+        <?php if ($clasid == '12' || $clasid == '13' || $clasid == '15' || $clasid == '17' || $clasid == '20' || $clasid == '22') { ?>
+          <div class="form-group">
+            <div class="col-sm-5">
+              <label>Subject Type</label>
+            </div>
+            <div class="col-sm-5">
+              <label class="radio-inline"><input type="radio" class="reg" checked="checked" name="type" value="1">Regular</label>
+              <label class="radio-inline"><input type="radio" class="opt" name="type" value="2">Optional</label>
+            </div>
+          </div>
+        <?php } ?>
+        <div class="form-group">
+
+          <div class="col-sm-5">
+            <?php if ($clasid == '12' || $clasid == '13' || $clasid == '15' || $clasid == '17' || $clasid == '20' || $clasid == '22' || $clasid == '26' || $clasid == '27') {
+              $ety = json_decode($regemplo);
+              foreach ($ety as $key => $value) {
+                $array[$key] = str_replace(";", " ", $value);
+              }
+            } else {
+              foreach ($employee as $key => $value) {
+                $array[$key] = str_replace(";", " ", $value);
+              }
+            }
+
+            echo $this->Form->input('employee_id[]', array('class' => 'form-control enm', 'type' => 'select', 'empty' => 'Select Employee', 'options' => $array, 'required', 'label' => false));
+
+            ?>
+            <span class="errer" style="color: red;"></span>
+          </div>
+
+          <script>
+            $('.enm').on('change', function() {
+              var empid = $(this).val();
+              var tid = '<?php echo $tt_id; ?>';
+              var week = '<?php echo $weekname; ?>';
+              var radioValue = $("input[type='radio']:checked").val();
+
+
+              $.ajax({
+                type: 'POST',
+                url: '<?php echo ADMIN_URL; ?>ClasstimeTabs/teacheroccupy',
+                data: {
+                  'empid': empid,
+                  'tid': tid,
+                  'week': week
+                },
+                success: function(data) {
+                  var arr = data.split('/');
+                  var clsname = arr['1'];
+                  var secname = arr['2'];
+                  var clid1 = arr['3'];
+                  var clid2 = arr['4'];
+                  var emp = arr['5'];
+
+
+                  if (data != '0') {
+
+                    if (confirm("Teacher already assigned in class (" + clsname + " - " + secname + "). Do you really want to assign this teacher?")) {
+                      $.ajax({
+                        type: 'POST',
+                        url: '<?php echo ADMIN_URL; ?>ClasstimeTabs/teacherdelete',
+                        data: {
+                          'clid1': clid1,
+                          'clid2': clid2,
+                          'emp': emp
+                        },
+                        success: function(data) {}
+
+                      });
+                    } else {
+                      $('.enm').val("");
+                    }
+
+
+                  }
+                },
+
+              });
+            });
+
+            $(".sub1").click(function() {
+              var d = $(this).val();
+              $('.sb').val(d);
+            });
+          </script>
+
+
+          <div class="col-sm-5" id="sub">
+            <?php
+            $rty = json_decode($regsub);
+            echo $this->Form->input('subject_id1[]', array('class' => 'form-control sub1', 'type' => 'select', 'empty' => 'Select Subject', 'options' => $rty, 'label' => false, 'required'));
+
+            ?>
+            <input type="hidden" name="subject_id[]" class="sb">
+
+            <?php echo $this->Form->input('class_id', array('class' => 'form-control', 'type' => 'hidden', 'empty' => 'Select Class', 'id' => 'c-id', 'required', 'value' => $classsec_id, 'label' => false)); ?> <?php echo $this->Form->input('tt_id', array('class' => 'form-control', 'type' => 'hidden', 'empty' => 'Select Class', 'id' => 'c-id', 'required', 'value' => $tt_id, 'label' => false)); ?>
+            <?php echo $this->Form->input('weekday', array('class' => 'form-control', 'type' => 'hidden', 'empty' => 'Select Class', 'id' => 'c-id', 'required', 'value' => $weekname, 'label' => false)); ?>
+          </div>
+
+
+          <div class="col-sm-2" class="subtype">
+            <a href="javascript:void(0);" class="add_field_butto" style="font-weight: bold; font-size: 15px;"><i class="fa fa-plus-circle"></i></a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div> <!-- /. modal-body -->
+<div class="modal-footer">
+  <button type="submit" id="sum" class="btn btn-primary pull-left">Assign</button> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+</div> <!-- /. modal-footer -->
+</form>
+
+<script>
+  /*$(document).ready(function(){ */
+
+  var incments = '1';
+  $(".add_field_butto").click(function() {
+    var clsid = '<?php echo $clasid; ?>';
+    incments++;
+
+    $('.after-add-more').append('<div class="assets_container asset2"> <div class="form-group"><div class="col-sm-5"><select  class="form-control  enm2' + incments + '" data-id="' + incments + '" name="employee_id[]" required="required"><option value="" >Select Teacher</option><?php if ($clasid == '26' || $clasid == '27') {
+       foreach ($ety as $key => $value) {  ?><option value="<?php echo $key; ?>"><?php echo str_replace(";", " ", $value); ?></option><?php }} else {
+       foreach ($employee as $key => $value) {  ?><option value="<?php echo $key; ?>"><?php echo str_replace(";", " ", $value); ?></option><?php }
+    } ?></select>  </div> <div class="col-sm-5" id="sub"><select data-id="' + incments + '" class="form-control sub2' + incments + '" name="subject_id1[]" required="required"><option value="" >Select Subject</option><?php foreach ($rty as $key => $value) { ?><option value="<?php echo $key; ?>"><?php echo $value; ?></option><?php } ?></select><input type="hidden" name="subject_id[]" class="sb' + incments + '" >  <?php echo $this->Form->input('class_id', array('class' => 'form-control', 'type' => 'hidden', 'empty' => 'Select Class', 'id' => 'c-id', 'required', 'value' => $classsec_id, 'label' => false)); ?>  <?php echo $this->Form->input('tt_id', array('class' => 'form-control', 'type' => 'hidden', 'empty' => 'Select Class', 'id' => 'c-id', 'required', 'value' => $tt_id, 'label' => false)); ?>    <?php echo $this->Form->input('weekday', array('class' => 'form-control', 'type' => 'hidden', 'empty' => 'Select Class', 'id' => 'c-id', 'required', 'value' => $weekname, 'label' => false)); ?>   </div> <div class="col-sm-2" style="float: right;" ><a href="javascript:void(0);" class="remove" style="font-weight: bold; font-size: 15px;"><i class="fa fa-minus-circle"></i></a>  </div> </div></div> ');
+
+    if (clsid != '25' && clsid != '26' && clsid != '27' && clsid != '1' && clsid != '2' && clsid != '3' && clsid != '4' && clsid != '6' && clsid != '7' && clsid != '8' && clsid != '9' && clsid != '10' && clsid != '11' && clsid != '18' && clsid != '19' && clsid != '23' && clsid != '24' && clsid != '28' && clsid != '29' && clsid != '34' && clsid != '35' && clsid != '30') {
+
+
+
+
+      var radioValue1 = $("input[type='radio']:checked").val();
+      if (radioValue1 == '1') {
+        var subn = '<?php echo $regsub; ?>';
+        var rege = '<?php echo $regemplo; ?>';
+
+        $(".sub2" + incments).html("");
+        $(".sub2" + incments).append('<option value="' + "" + '">' + "Select Subject" + '</option>');
+        $.each(JSON.parse(subn), function(key, value) {
+          $(".sub2" + incments).append('<option value="' + key + '">' + value + '</option>');
+        });
+
+        $(".enm2" + incments).html("");
+        $(".enm2" + incments).append('<option value="' + "" + '">' + "Select Teacher" + '</option>');
+        $.each(JSON.parse(rege), function(key, value) {
+          $(".enm2" + incments).append('<option value="' + key + '">' + value.replace(/;/g, " ") + '</option>');
+        });
+      } else {
+        var subn2 = '<?php echo $optsub; ?>';
+        var opte = '<?php echo $optemplo; ?>';
+        $(".sub2" + incments).html("");
+        $(".sub2" + incments).append('<option value="' + "" + '">' + "Select Subject" + '</option>');
+        $.each(JSON.parse(subn2), function(key, value) {
+          $(".sub2" + incments).append('<option value="' + key + '">' + value + '</option>');
+        });
+
+        $(".enm2" + incments).html("");
+        $(".enm2" + incments).append('<option value="' + "" + '">' + "Select Teacher" + '</option>');
+        $.each(JSON.parse(opte), function(key, value) {
+          $(".enm2" + incments).append('<option value="' + key + '">' + value.replace(/;/g, " ") + '</option>');
+        });
+      }
+
+
+
+      $('.opt').click(function() {
+        $(".reg").prop('checked', false);
+        var subn2 = '<?php echo $optsub; ?>';
+        var opte = '<?php echo $optemplo; ?>';
+        $(".sub2" + incments).prop('disabled', false);
+        $(".sub2" + incments).html("");
+        $(".sub2" + incments).append('<option value="' + "" + '">' + "Select Subject" + '</option>');
+        $.each(JSON.parse(subn2), function(key, value) {
+          $(".sub2" + incments).append('<option value="' + key + '">' + value + '</option>');
+        });
+
+        $(".enm2" + incments).html("");
+        $(".enm2" + incments).append('<option value="' + "" + '">' + "Select Teacher" + '</option>');
+        $.each(JSON.parse(opte), function(key, value) {
+          $(".enm2" + incments).append('<option value="' + key + '">' + value.replace(/;/g, " ") + '</option>');
+        });
+
+      });
+
+      $('.reg').click(function() {
+        $('.asset2').hide();
+        var subn = '<?php echo $regsub; ?>';
+        var rege = '<?php echo $regemplo; ?>';
+        $(".sub2" + incments).prop('disabled', false);
+        $(".sub2" + incments).html("");
+        $(".sub2" + incments).append('<option value="' + "" + '">' + "Select Subject" + '</option>');
+        $.each(JSON.parse(subn), function(key, value) {
+          $(".sub2" + incments).append('<option value="' + key + '">' + value + '</option>');
+        });
+
+        $(".enm2" + incments).html("");
+        $(".enm2" + incments).append('<option value="' + "" + '">' + "Select Teacher" + '</option>');
+        $.each(JSON.parse(rege), function(key, value) {
+          $(".enm2" + incments).append('<option value="' + key + '">' + value.replace(/;/g, " ") + '</option>');
+        });
+      });
+
+
+
+    }
+
+    $(".enm2" + incments).on('change', function() {
+
+      var empid = $(this).val();
+      var tid = '<?php echo $tt_id; ?>';
+      var week = '<?php echo $weekname; ?>';
+      var mh = $(this).data('id');
+      $.ajax({
+        type: 'POST',
+        url: '<?php echo ADMIN_URL; ?>ClasstimeTabs/teacheroccupy',
+        data: {
+          'empid': empid,
+          'tid': tid,
+          'week': week
+        },
+        success: function(data) {
+          var arr = data.split('/');
+          var clsname = arr['1'];
+          var secname = arr['2'];
+          var clid1 = arr['3'];
+          var clid2 = arr['4'];
+          var emp = arr['5'];
+          if (data != '0') {
+            if (confirm("Teacher already assigned in class (" + clsname + " - " + secname + "). Do you really want to assign this teacher?")) {
+              $.ajax({
+                type: 'POST',
+                url: '<?php echo ADMIN_URL; ?>ClasstimeTabs/teacherdelete',
+                data: {
+                  'clid1': clid1,
+                  'clid2': clid2,
+                  'emp': emp
+                },
+                success: function(data) {
+                }
+
+              });
+            } else {
+
+
+              $(".enm2" + mh).val("");
+            }
+          }
+        },
+
+      });
+    });
+
+    $(".sub2" + incments).click(function() {
+      var d = $(this).val();
+      var gh = $(this).data('id');
+      $(".sb" + gh).val(d);
+    });
+  });
+
+  $("body").on("click", ".remove", function() {
+    $(this).closest('.assets_container').remove();
+  });
+
+</script>
+
+
+
+
+<script>
+  $(document).ready(function() {
+    $('#c-id').on('change', function() {
+      var id = $('#c-id').val();
+      $.ajax({
+        type: 'POST',
+        url: '<?php echo ADMIN_URL; ?>ClasstimeTabs/find_subject',
+        data: {
+          'id': id
+        },
+        success: function(data) {
+          $('#s-id').empty();
+          $('#s-id').html(data);
+        },
+
+      });
+    });
+  });
+</script>
