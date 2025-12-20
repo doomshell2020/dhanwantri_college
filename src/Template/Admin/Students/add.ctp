@@ -232,6 +232,9 @@
                                         echo $this->Form->input('enroll', array('class' => 'form-control', 'placeholder' => 'Enrollnment', 'id' => 'enroll', 'value' => $addstd, 'label' => false, 'readonly'));
                                     } ?>
                                         </div>
+                                        <?php //} 
+                                        ?>
+
 
 
                                         <div class="col-md-4" id="frno2" style="display:none;">

@@ -25,7 +25,7 @@ class DatarecordController extends AppController
       'persistent' => false,
       'host' => MYSQLHOST,
       'username' => MYSQLUESRNAME,
-      'password' => MYSQLPASSWORD,
+      'password' => MYSQLPASSWORD,  
       'database' => $dbs,
       'encoding' => 'utf8mb4',
       'timezone' => 'UTC',
@@ -668,7 +668,7 @@ class DatarecordController extends AppController
   // }
 
   // Import Student 
-  public function importstudentsV1()
+  public function importstudents()
   {
     $this->viewBuilder()->layout('admin');
     $this->loadModel('Students');
@@ -801,95 +801,6 @@ class DatarecordController extends AppController
           die('Error loading file "' . pathinfo($inputFileName, PATHINFO_BASENAME) . '": ' . $e->getMessage());
         }
       }
-    }
-  }
-
-  public function importstudents()
-  {
-    $this->viewBuilder()->layout('admin');
-    $this->loadModel('Students');
-    $this->loadModel('Houses');
-    $this->loadModel('Classes');
-    $this->loadModel('Sections');
-    $this->loadModel('Users');
-    $adminData = $this->Users->find('all')->where(['Users.role_id' => 1])->first();
-
-    if ($this->request->is('post')) {
-
-      $formattedData = [];
-      $error = [];
-      $lastEnroll =  $this->Students->find('all')->select(['id', 'enroll'])->order(['enroll' => 'DESC'])->first();
-      $enroll = $lastEnroll['enroll'] + 1;
-
-      $students = [
-        ["firstName" => "ANIL", "lastName" => "CHOUDHARY", "fatherName" => "GYARSHI LAL CHOUDHARY", "mobile" => "123456789"],
-        ["firstName" => "ANKIT", "lastName" => "CHOUDHARY", "fatherName" => "SHANKAR LAL", "mobile" => "123456789"],
-        ["firstName" => "SACHIN", "lastName" => "", "fatherName" => "DINESH GURJAR", "mobile" => "123456789"],
-        ["firstName" => "VISHNU", "lastName" => "JITARWAL", "fatherName" => "BABU LAL JITARWAL", "mobile" => "123456789"]
-      ];
-
-      // pr($students);
-      // exit;
-
-      $failedRecords = [];
-      $enroll = 1;
-
-      foreach ($students as $key => $row) {
-
-        // Capitalize first letter of names
-        $firstName  = ucfirst(strtolower(trim($row['firstName'])));
-        $lastName   = ucfirst(strtolower(trim($row['lastName'])));
-        $fatherName = ucfirst(strtolower(trim($row['fatherName'])));
-
-        // Prepare formatted array
-        $formattedRow = [];
-        $formattedRow['enroll']            = $enroll++;
-        $formattedRow['fname']             = $firstName;
-        $formattedRow['lname']             = $lastName;
-        $formattedRow['dob']               = date('Y-m-d', strtotime('2000-01-01'));
-        $formattedRow['gender']            = 'Male';
-        $formattedRow['class_id']          = 19;
-        $formattedRow['section_id']        = 1;
-        $formattedRow['board']             = 2;
-        $formattedRow['application_date']  = date('Y-m-d');
-        $formattedRow['admission_date']    = date('Y-m-d');
-        $formattedRow['batch']             = '2025-26';
-        $formattedRow['admissionyear']     = '2025-26';
-        $formattedRow['acedmicyear']       = trim($adminData['academic_year']);
-        $formattedRow['session']           = '2025-26';
-        $formattedRow['mode']              = 'Management';
-        $formattedRow['board_id']          = 2;
-        $formattedRow['mobile']            = $row['mobile'];
-        $formattedRow['fathername']        = $fatherName;
-        $formattedRow['father_mobile']     = $row['mobile'];
-        $formattedRow['mother_mobile']     = $row['mobile'];
-        $formattedRow['due_fees']          = 0;
-        $formattedRow['status']            = 'Y';
-        // Store formatted result for output
-        $formattedData[] = $formattedRow;
-
-        // pr($formattedData);exit;
-
-        $newApplicant = $this->Students->newEntity();
-        $setData = $this->Students->patchEntity($newApplicant, $formattedRow);
-
-        if ($this->Students->save($setData)) {
-          echo "Record Saved Successfully<br>";
-          // pr($setData);
-        } else {
-          echo "❌ Save Failed — Validation Errors:<br>";
-          // pr($setData->getErrors());
-        }
-
-      }
-
-      echo "<pre>";
-      echo "Formatted Data:\n";
-      print_r($formattedData);
-
-      echo "\n\nFailed Records:\n";
-      print_r($failedRecords);
-      exit;
     }
   }
 
@@ -1682,6 +1593,7 @@ class DatarecordController extends AppController
         $connffsss = ConnectionManager::get('default');
         $employee_user_data =  "UPDATE `students` SET `enrolment_no`='$Enrollment_no ',`roll_no`='$rollNo' WHERE enroll =" . $student['enroll'];
         $connffsss->execute($employee_user_data);
+       
       }
       $this->Flash->success(__('Students Enrollment & Roll No Updated Successfully!!!'));
       return $this->redirect(['action' => 'index']);

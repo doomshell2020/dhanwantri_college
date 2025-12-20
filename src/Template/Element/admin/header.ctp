@@ -204,7 +204,7 @@
                             </a>
                             </div>
                         */ ?>
-                    <?  } ?>
+                    <?php  } ?>
                     <div class="navbar-custom-menu">
                         <!-- <ul class="nav navbar-nav nt_menu_align" style="margin-left:230px;">-->
                         <ul class="nav navbar-nav nt_menu_align">

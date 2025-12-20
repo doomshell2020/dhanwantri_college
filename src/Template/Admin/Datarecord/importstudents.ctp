@@ -12,11 +12,8 @@
   <div class="box">
     <div class="box-body">
       <?php echo $this->Form->create($classes, array(
-        'class' => 'form-horizontal',
-        'id' => 'sevice_form',
-        'type' => 'file',
-        'enctype' => 'multipart/form-data',
-        'novalidate'
+        'class' => 'form-horizontal', 'id' => 'sevice_form', 'type' => 'file',
+        'enctype' => 'multipart/form-data', 'novalidate'
       )); ?>
       <table class="table table-bordered table-striped">
         <thead>
