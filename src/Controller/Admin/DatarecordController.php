@@ -15,7 +15,7 @@ include '../vendor/PHPExcel/Classes/PHPExcel.php';
 include '../vendor/PHPExcel/Classes/PHPExcel/IOFactory.php';
 class DatarecordController extends AppController
 {
-
+  //  Datarecord/importstudents
   public function connection($dbs)
   {
     //echo $dbs; die;
@@ -25,7 +25,7 @@ class DatarecordController extends AppController
       'persistent' => false,
       'host' => MYSQLHOST,
       'username' => MYSQLUESRNAME,
-      'password' => MYSQLPASSWORD,  
+      'password' => MYSQLPASSWORD,
       'database' => $dbs,
       'encoding' => 'utf8mb4',
       'timezone' => 'UTC',
@@ -668,141 +668,155 @@ class DatarecordController extends AppController
   // }
 
   // Import Student 
-  public function importstudents()
-  {
-    $this->viewBuilder()->layout('admin');
-    $this->loadModel('Students');
-    $this->loadModel('Houses');
-    $this->loadModel('Classes');
-    $this->loadModel('Sections');
-    $this->loadModel('Users');
-    $adminData = $this->Users->find('all')->where(['Users.role_id' => 1])->first();
+  // public function importstudents()
+  // {
+  //   $this->viewBuilder()->layout('admin');
+  //   $this->loadModel('Students');
+  //   $this->loadModel('Houses');
+  //   $this->loadModel('Classes');
+  //   $this->loadModel('Sections');
+  //   $this->loadModel('Users');
+  //   $adminData = $this->Users->find('all')->where(['Users.role_id' => 1])->first();
 
-    if ($this->request->is('post') || $this->request->is('put')) {
+  //   if ($this->request->is('post') || $this->request->is('put')) {
 
-      if (!empty($_FILES['file']['tmp_name'])) {
-        $inputFileName = $_FILES['file']['tmp_name'];
-        try {
+  //     if (!empty($_FILES['file']['tmp_name'])) {
+  //       $inputFileName = $_FILES['file']['tmp_name'];
+  //       try {
 
-          $objPHPExcel = \PHPExcel_IOFactory::load($inputFileName);
-          $sheet = $objPHPExcel->getActiveSheet();
-          $dataArr = array();
-          $highestRow = $sheet->getHighestDataRow();
-          $highestColumn = $sheet->getHighestDataColumn();
-          $highestColumnIndex = \PHPExcel_Cell::columnIndexFromString($highestColumn);
+  //         $objPHPExcel = \PHPExcel_IOFactory::load($inputFileName);
+  //         $sheet = $objPHPExcel->getActiveSheet();
+  //         $dataArr = array();
+  //         $highestRow = $sheet->getHighestDataRow();
+  //         $highestColumn = $sheet->getHighestDataColumn();
+  //         $highestColumnIndex = \PHPExcel_Cell::columnIndexFromString($highestColumn);
 
-          // Loop through rows and columns to extract data
-          for ($row = 2; $row <= $highestRow; ++$row) {
-            $rowData = array();
-            for ($col = 0; $col < $highestColumnIndex; ++$col) {
-              $val = $sheet->getCellByColumnAndRow($col, $row)->getValue();
-              $rowData[] = $val;
-            }
-            // Check if the row data contains only empty values (empty strings)
-            // Remove blank arrays from $dataArr
-            if (!empty(array_filter($rowData))) {
-              $dataArr[] = $rowData;
-            }
-          }
-          pr($dataArr);
-          exit;
+  //         // Loop through rows and columns to extract data
+  //         for ($row = 2; $row <= $highestRow; ++$row) {
+  //           $rowData = array();
+  //           for ($col = 0; $col < $highestColumnIndex; ++$col) {
+  //             $val = $sheet->getCellByColumnAndRow($col, $row)->getValue();
+  //             $rowData[] = $val;
+  //           }
+  //           // Check if the row data contains only empty values (empty strings)
+  //           // Remove blank arrays from $dataArr
+  //           if (!empty(array_filter($rowData))) {
+  //             $dataArr[] = $rowData;
+  //           }
+  //         }
+  //         pr($dataArr);
+  //         exit;
 
-          $formattedData = [];
-          $error = [];
-          $lastEnroll =  $this->Students->find('all')->select(['id', 'enroll'])->order(['enroll' => 'DESC'])->first();
-          $enroll = $lastEnroll['enroll'] + 1;
-          foreach ($dataArr as $key => $row) {
-            // pr($row);exit;
-            // if (!empty($row[15]) && $row[15] != '-') {
-            //   $exist =  $this->Students->find('all')->where(['formno' => $row[15]])->select(['id', 'fname'])->first();
-            //   if (!empty($exist)) {
-            //     pr($row[15]);
-            //     continue;
-            //   }
-            // }
+  //         $formattedData = [];
+  //         $error = [];
+  //         $lastEnroll =  $this->Students->find('all')->select(['id', 'enroll'])->order(['enroll' => 'DESC'])->first();
+  //         $enroll = $lastEnroll['enroll'] + 1;
+  //         foreach ($dataArr as $key => $row) {
+  //           // pr($row);exit;
+  //           // if (!empty($row[15]) && $row[15] != '-') {
+  //           //   $exist =  $this->Students->find('all')->where(['formno' => $row[15]])->select(['id', 'fname'])->first();
+  //           //   if (!empty($exist)) {
+  //           //     pr($row[15]);
+  //           //     continue;
+  //           //   }
+  //           // }
 
-            $formattedRow = [];
-            $formattedRow['enroll'] = $enroll++; // Enroll
-            $formattedRow['fname'] = trim($row[1]); // First Name
-            $formattedRow['middlename'] = trim($row[2]); // Middle Name
-            $formattedRow['lname'] = trim($row[3]); // Last Name
-            $formattedRow['username'] = trim($row[4]); // Email
-            $formattedRow['dob'] = date('Y-m-d', strtotime($row[5])); // DOB
-            $formattedRow['gender'] = trim($row[6]); // Gender
-            $formattedRow['cast'] = trim($row[7]); // Cart
-            $formattedRow['category'] = trim($row[7]); // Cart
-            $formattedRow['class_id'] = $row[8]; // Course
-            $formattedRow['section_id'] = $row[9]; // Year / Semester
-            $formattedRow['address'] = trim($row[10]); // Full Address
-            $formattedRow['percentage_in_12th'] = $row[11]; // Percentage in 12th
-            $formattedRow['board'] = $row[12]; // 12th Board 
-            $formattedRow['original_document'] = trim($row[13]); // Original Document
-            $formattedRow['required_document'] = trim($row[14]); // Require Document
-            $formattedRow['formno'] = $row[15]; // Form Number
-            $formattedRow['application_date'] = isset($row[16]) && date('Y-m-d', strtotime($row[16])) !== '1970-01-01' ? date('Y-m-d', strtotime($row[16])) : date('Y-m-d'); // Date of Application
-            $formattedRow['admission_date'] = date('Y-m-d', strtotime($row[17])); // Admision Date
-            $formattedRow['batch'] = trim($row[18]); // Batch
-            $formattedRow['admissionyear'] = trim($row[18]); // Addmission Year*
-            $formattedRow['acedmicyear'] = trim($adminData['academic_year']); // Addmission Year* 
-            $formattedRow['session'] = trim($row[19]); // Session
-            $formattedRow['mode'] = trim($row[20]); // Mode
-            $formattedRow['board_id'] = $row[21]; // organisation
-            $formattedRow['adaharnumber'] = $row[22]; // Aadhar Number
-            $formattedRow['mobile'] = $row[23]; // Student Mobile
-            $formattedRow['fathername'] = trim($row[24]); // Father Name
-            $formattedRow['father_mobile'] = $row[25]; // Father Mobile
-            $formattedRow['f_occupation'] = trim($row[26]); // Father Occupation
-            $formattedRow['mother_mobile'] = $row[27]; // Mother Mobile
-            $formattedRow['remarks'] = trim($row[28]); // Remarks
-            $formattedRow['due_fees'] = $row[29]; // Total Due
-            $formattedRow['status'] = $row[30]; // Status*
+  //           $formattedRow = [];
+  //           $formattedRow['enroll'] = $enroll++; // Enroll
+  //           $formattedRow['fname'] = trim($row[1]); // First Name
+  //           $formattedRow['middlename'] = trim($row[2]); // Middle Name
+  //           $formattedRow['lname'] = trim($row[3]); // Last Name
+  //           $formattedRow['username'] = trim($row[4]); // Email
+  //           $formattedRow['dob'] = date('Y-m-d', strtotime($row[5])); // DOB
+  //           $formattedRow['gender'] = trim($row[6]); // Gender
+  //           $formattedRow['cast'] = trim($row[7]); // Cart
+  //           $formattedRow['category'] = trim($row[7]); // Cart
+  //           $formattedRow['class_id'] = $row[8]; // Course
+  //           $formattedRow['section_id'] = $row[9]; // Year / Semester
+  //           $formattedRow['address'] = trim($row[10]); // Full Address
+  //           $formattedRow['percentage_in_12th'] = $row[11]; // Percentage in 12th
+  //           $formattedRow['board'] = $row[12]; // 12th Board 
+  //           $formattedRow['original_document'] = trim($row[13]); // Original Document
+  //           $formattedRow['required_document'] = trim($row[14]); // Require Document
+  //           $formattedRow['formno'] = $row[15]; // Form Number
+  //           $formattedRow['application_date'] = isset($row[16]) && date('Y-m-d', strtotime($row[16])) !== '1970-01-01' ? date('Y-m-d', strtotime($row[16])) : date('Y-m-d'); // Date of Application
+  //           $formattedRow['admission_date'] = date('Y-m-d', strtotime($row[17])); // Admision Date
+  //           $formattedRow['batch'] = trim($row[18]); // Batch
+  //           $formattedRow['admissionyear'] = trim($row[18]); // Addmission Year*
+  //           $formattedRow['acedmicyear'] = trim($adminData['academic_year']); // Addmission Year* 
+  //           $formattedRow['session'] = trim($row[19]); // Session
+  //           $formattedRow['mode'] = trim($row[20]); // Mode
+  //           $formattedRow['board_id'] = $row[21]; // organisation
+  //           $formattedRow['adaharnumber'] = $row[22]; // Aadhar Number
+  //           $formattedRow['mobile'] = $row[23]; // Student Mobile
+  //           $formattedRow['fathername'] = trim($row[24]); // Father Name
+  //           $formattedRow['father_mobile'] = $row[25]; // Father Mobile
+  //           $formattedRow['f_occupation'] = trim($row[26]); // Father Occupation
+  //           $formattedRow['mother_mobile'] = $row[27]; // Mother Mobile
+  //           $formattedRow['remarks'] = trim($row[28]); // Remarks
+  //           $formattedRow['due_fees'] = $row[29]; // Total Due
+  //           $formattedRow['status'] = $row[30]; // Status*
 
-            if ($this->validateRequiredFields($formattedRow)) {
-              $formattedData[] = $formattedRow;
-            } else {
-              $error[] = $formattedRow['fname'] . ' ' . $formattedRow['lname'];
-            }
-          }
-          // pr($formattedData);
-          // exit;
+  //           if ($this->validateRequiredFields($formattedRow)) {
+  //             $formattedData[] = $formattedRow;
+  //           } else {
+  //             $error[] = $formattedRow['fname'] . ' ' . $formattedRow['lname'];
+  //           }
+  //         }
+  //         // pr($formattedData);
+  //         // exit;
 
-          // Start the transaction.
-          $connection = ConnectionManager::get('default');
-          $connection->begin();
+  //         // Start the transaction.
+  //         $connection = ConnectionManager::get('default');
+  //         $connection->begin();
 
-          try {
-            foreach ($formattedData as $studentDetails) {
+  //         try {
+  //           foreach ($formattedData as $studentDetails) {
 
-              $newApplicant = $this->Students->newEntity();
-              $setData = $this->Students->patchEntity($newApplicant, $studentDetails);
-              $this->Students->save($setData);
-            }
+  //             $newApplicant = $this->Students->newEntity();
+  //             $setData = $this->Students->patchEntity($newApplicant, $studentDetails);
+  //             $this->Students->save($setData);
+  //           }
 
-            // Commit the transaction if everything is successful.
-            $connection->commit();
+  //           // Commit the transaction if everything is successful.
+  //           $connection->commit();
 
-            if (!empty($error)) {
-              $errorMessage = 'Please fill required fields for the following students: ' . implode(', ', $error);
-              $this->Flash->error($errorMessage);
-            }
+  //           if (!empty($error)) {
+  //             $errorMessage = 'Please fill required fields for the following students: ' . implode(', ', $error);
+  //             $this->Flash->error($errorMessage);
+  //           }
 
-            $this->Flash->success(__('Student Uploaded successfully'));
-            // return $this->redirect(['action' => 'index']);
-            return $this->redirect($this->referer());
+  //           $this->Flash->success(__('Student Uploaded successfully'));
+  //           // return $this->redirect(['action' => 'index']);
+  //           return $this->redirect($this->referer());
 
 
-            // return $formattedData;
-          } catch (\Exception $e) {
-            // Rollback the transaction on any exception.
-            $connection->rollback();
-            throw $e;
-          }
-        } catch (PHPExcel_Exception $e) {
-          die('Error loading file "' . pathinfo($inputFileName, PATHINFO_BASENAME) . '": ' . $e->getMessage());
-        }
-      }
-    }
-  }
+  //           // return $formattedData;
+  //         } catch (\Exception $e) {
+  //           // Rollback the transaction on any exception.
+  //           $connection->rollback();
+  //           throw $e;
+  //         }
+  //       } catch (PHPExcel_Exception $e) {
+  //         die('Error loading file "' . pathinfo($inputFileName, PATHINFO_BASENAME) . '": ' . $e->getMessage());
+  //       }
+  //     }
+  //   }
+  // }
+
+
+  // function validateRequiredFields(array $data): bool
+  // {
+  //   $requiredFields = ['fname', 'dob', 'class_id', 'section_id', 'address', 'formno', 'admission_date', 'batch', 'session'];
+
+  //   foreach ($requiredFields as $field) {
+  //     if (empty(trim($data[$field]))) {
+  //       return false;
+  //     }
+  //   }
+
+  //   return true;
+  // }
 
 
   // function validateRequiredFieldsemployee(array $data): bool
@@ -823,18 +837,6 @@ class DatarecordController extends AppController
 
 
 
-  function validateRequiredFields(array $data): bool
-  {
-    $requiredFields = ['fname', 'dob', 'class_id', 'section_id', 'address', 'formno', 'admission_date', 'batch', 'session'];
-
-    foreach ($requiredFields as $field) {
-      if (empty(trim($data[$field]))) {
-        return false;
-      }
-    }
-
-    return true;
-  }
 
 
   public function  importlibrarydata()
@@ -1593,10 +1595,152 @@ class DatarecordController extends AppController
         $connffsss = ConnectionManager::get('default');
         $employee_user_data =  "UPDATE `students` SET `enrolment_no`='$Enrollment_no ',`roll_no`='$rollNo' WHERE enroll =" . $student['enroll'];
         $connffsss->execute($employee_user_data);
-       
       }
       $this->Flash->success(__('Students Enrollment & Roll No Updated Successfully!!!'));
       return $this->redirect(['action' => 'index']);
     }
+  }
+
+
+  // function for add d pharmancy students
+  public function importstudents()
+  {
+    $this->viewBuilder()->layout('admin');
+    $this->loadModel('Students');
+    $this->loadModel('Users');
+
+    $adminData = $this->Users->find('all')->where(['Users.role_id' => 1])->first();
+
+    // Exact Array Data (61 Records as per your snapshot)
+
+    $dataArr = [
+      ["sr_no" => 1, "student_name" => "PREM SINGH", "father_name" => "RAMGOPAL MALI", "mother_name" => "PATI BAI", "dob" => "2006-08-15", "mo_no" => "7790904199", "address" => "39B SHRIKRISHNA NAGAR ,PATRKAR COLONY 302020"],
+      ["sr_no" => 2, "student_name" => "NAVEEN SINGH", "father_name" => "AMAR SINGH", "mother_name" => "MAYA KANWAR", "dob" => "2006-05-20", "mo_no" => "8104446386", "address" => "VPO-BHAINSLANA THE. PAOTA, KOTPUTLI,BEHROR 303107"],
+      ["sr_no" => 3, "student_name" => "DIPESH SAINI", "father_name" => "PHOOL CHAND SAINI", "mother_name" => "SAROJ DEVI", "dob" => "2006-01-15", "mo_no" => "7877398518", "address" => ""],
+      ["sr_no" => 4, "student_name" => "PAVAN KUMAR MAHAWAR", "father_name" => "RAMESH CHAND MAHAWAR", "mother_name" => "UGANTI DEVI MAHAWAR", "dob" => "1998-07-14", "mo_no" => "8561046206", "address" => "VILL- HARLODA POST GARHKHERA TEHSIL- NADOTI , KARAULI"],
+      ["sr_no" => 5, "student_name" => "SONU RAM SAINI", "father_name" => "RAM SINGH SAINI", "mother_name" => "UGANTI DEVI", "dob" => "1997-10-20", "mo_no" => "8094669406", "address" => "DHULKOT, DAUSA"],
+      ["sr_no" => 6, "student_name" => "LAKSHYA JAIN", "father_name" => "MANISH KUMAR JAIN", "mother_name" => "", "dob" => "2004-06-22", "mo_no" => "9521688043", "address" => ""],
+      ["sr_no" => 7, "student_name" => "CHANCHAL SHARMA", "father_name" => "VIJAY KUMAR SHARMA", "mother_name" => "ASHA SHARMA", "dob" => "1996-04-17", "mo_no" => "8619253200", "address" => "CHOUDHARY COLONY, NEAR RAILWAY COLONY SIKAR"],
+      ["sr_no" => 8, "student_name" => "LUXMI MOIRANGTHEM", "father_name" => "MOIRANGTHEM HERAMOT SINGH", "mother_name" => "", "dob" => "1987-04-16", "mo_no" => "9772125867", "address" => "IMPHAL WEST , IMPHAL .MAIPUR 795001"],
+      ["sr_no" => 9, "student_name" => "RAKESH KHANDOLIYA", "father_name" => "SHRAWAN LAL KHANDOLIYA", "mother_name" => "", "dob" => "2001-06-25", "mo_no" => "8741916304", "address" => ""],
+      ["sr_no" => 10, "student_name" => "DIYA MISHRAA", "father_name" => "V.K. MISHRA", "mother_name" => "", "dob" => "1987-10-06", "mo_no" => "", "address" => ""],
+      ["sr_no" => 11, "student_name" => "SANKALP LABANIYA", "father_name" => "SUBHASH LABANIYA", "mother_name" => "PREM DEVI", "dob" => "2005-11-28", "mo_no" => "", "address" => ""],
+      ["sr_no" => 12, "student_name" => "ABHISHEK BAIRWA", "father_name" => "DAYARAM BAIRWA", "mother_name" => "SITA DEVI", "dob" => "2006-01-04", "mo_no" => "9636420674", "address" => ""],
+      ["sr_no" => 13, "student_name" => "RAVI KUMAR SAINI", "father_name" => "DHAN SINGH SAINI", "mother_name" => "", "dob" => "2007-08-10", "mo_no" => "", "address" => "HABU KI DHANI SAWAI MAGHOPUR . GANGAPUR"],
+      ["sr_no" => 14, "student_name" => "ROHIT SAINI", "father_name" => "RAM KISHOR SAINI", "mother_name" => "MEENU DEVI", "dob" => "2007-04-05", "mo_no" => "8949605252", "address" => "DIGGI ,TONK"],
+      ["sr_no" => 15, "student_name" => "GAURAV KUMAR KOOKSWAL", "father_name" => "RAM BABU GURJAR", "mother_name" => "PREETAM GURJAR", "dob" => "01/082005", "mo_no" => "9358529818", "address" => "GURJAR MOHALLA ,GANDAL, SAWAI MADHOPUR"],
+      ["sr_no" => 16, "student_name" => "GOURAV GARG", "father_name" => "HARI BABU GARG", "mother_name" => "SHIV KUMARI", "dob" => "1995-06-28", "mo_no" => "8949271002", "address" => "29 A TRIPUTI BALA JI NAGAR SANGANER JAIPUR"],
+      ["sr_no" => 17, "student_name" => "GOLU BAIRWA", "father_name" => "SUGYANI BAIRWA", "mother_name" => "MANGAL BAI BAIRWA", "dob" => "2004-05-15", "mo_no" => "7425067696", "address" => "KARAULI RAJASTHAN"],
+      ["sr_no" => 18, "student_name" => "LOKESH KUMAR GARG", "father_name" => "BANWARI LAL GARG", "mother_name" => "SHIMLA DEVI", "dob" => "1988-03-15", "mo_no" => "8949316919", "address" => "MUHANA MANDI ROAD SANGANER, JAIPUR 302020"],
+      ["sr_no" => 19, "student_name" => "MUBARIK MOHAMMAD", "father_name" => "FARID MOHAMMAD", "mother_name" => "AKABARI", "dob" => "2005-10-12", "mo_no" => "9782289401", "address" => "SAHDOLI ALWAR"],
+      ["sr_no" => 20, "student_name" => "PRAVEEN KUMAR", "father_name" => "RAMESH CHAND GOUR", "mother_name" => "KRISHAN SHARMA", "dob" => "1992-12-07", "mo_no" => "9672611666", "address" => "DAUSA"],
+      ["sr_no" => 21, "student_name" => "MAYA CHOUDHARY", "father_name" => "SHANKAR LAL CHOUDHARY", "mother_name" => "SITA DEVI", "dob" => "2002-08-14", "mo_no" => "8955699094", "address" => "KISHANPURA, PHAGI, GOHANDI.JAIPUR"],
+      ["sr_no" => 22, "student_name" => "TEJASHWANI SINGH", "father_name" => "NARENDRA SINGH", "mother_name" => "", "dob" => "2006-12-17", "mo_no" => "9983312400", "address" => "K.V.-06 PRATAP NAGAR JAIPUR"],
+      ["sr_no" => 23, "student_name" => "AAZAM KHAN", "father_name" => "ASHU KHAN", "mother_name" => "AKABARI", "dob" => "2004-08-08", "mo_no" => "9079883788", "address" => "ALWAR"],
+      ["sr_no" => 24, "student_name" => "ADITI SHARMA", "father_name" => "MAHESH KUMAR SHARMA", "mother_name" => "MANJU BALA SHARMA", "dob" => "2001-05-10", "mo_no" => "", "address" => ""],
+      ["sr_no" => 25, "student_name" => "RAVI KANT SHARMA", "father_name" => "HANUMAN SAHAY SHARMA", "mother_name" => "DAULAT SHARMA", "dob" => "1990-07-12", "mo_no" => "", "address" => ""],
+      ["sr_no" => 26, "student_name" => "POOJA SAINI", "father_name" => "KALU RAM SAINI", "mother_name" => "", "dob" => "2002-03-28", "mo_no" => "9799176600", "address" => ""],
+      ["sr_no" => 27, "student_name" => "VIKAS SAINI", "father_name" => "RAMPAL SAINI", "mother_name" => "", "dob" => "1998-03-03", "mo_no" => "9782702844", "address" => ""],
+      ["sr_no" => 28, "student_name" => "RAHUL KUMAR SAINI", "father_name" => "NORAT MAL SAINI", "mother_name" => "", "dob" => "1995-07-08", "mo_no" => "", "address" => ""],
+      ["sr_no" => 29, "student_name" => "VISHNU SAINI", "father_name" => "NATHU LAL MALI", "mother_name" => "LALI DEVI", "dob" => "1998-07-20", "mo_no" => "", "address" => ""],
+      ["sr_no" => 30, "student_name" => "PUSHPENDRA KUMAR JAT", "father_name" => "BALLU RAM JAT", "mother_name" => "NANCHHI DEVI", "dob" => "1998-08-10", "mo_no" => "", "address" => ""],
+      ["sr_no" => 31, "student_name" => "SANTOSH KUMAR SAINI", "father_name" => "DEENDAYAL SAINI", "mother_name" => "GEETA DEVI", "dob" => "1997-12-05", "mo_no" => "", "address" => ""],
+      ["sr_no" => 32, "student_name" => "TARUN CHOUDHARY", "father_name" => "SIYA RAM CHOUDHARY", "mother_name" => "", "dob" => "2001-01-29", "mo_no" => "", "address" => ""],
+      ["sr_no" => 33, "student_name" => "ABHISHEK CHOUDHARY", "father_name" => "RAMESH CHOUDHARY", "mother_name" => "BADAM DEVI", "dob" => "2006-10-12", "mo_no" => "", "address" => ""],
+      ["sr_no" => 34, "student_name" => "MONENDRA SINGH RAJAWAT", "father_name" => "RAM SINGH", "mother_name" => "SAYAR KANWAR", "dob" => "1998-05-08", "mo_no" => "", "address" => ""],
+      ["sr_no" => 35, "student_name" => "MAHENDRA CHOUDHARY", "father_name" => "KANA RAM CHOUDHARY", "mother_name" => "LALA DEVI", "dob" => "1998-07-04", "mo_no" => "", "address" => ""],
+      ["sr_no" => 36, "student_name" => "RAJENDRA KHOKHER", "father_name" => "SATYA NARAYAN KHOKHER", "mother_name" => "SUGYAN DEVI", "dob" => "2002-02-02", "mo_no" => "", "address" => ""],
+      ["sr_no" => 37, "student_name" => "GOVIND KUMAR SAINI", "father_name" => "JAGDISH PRASAD SAINI", "mother_name" => "", "dob" => "1993-07-03", "mo_no" => "", "address" => ""],
+      ["sr_no" => 38, "student_name" => "VIKRAM SINGH YADAV", "father_name" => "RAMJI LAL YADAV", "mother_name" => "KAMLA YADAV", "dob" => "1992-04-03", "mo_no" => "", "address" => ""],
+      ["sr_no" => 39, "student_name" => "DAYA SHANKAR GAUR", "father_name" => "SHIV LAHARI GAUR", "mother_name" => "SUMITRA DEVI", "dob" => "1995-05-03", "mo_no" => "", "address" => ""],
+      ["sr_no" => 40, "student_name" => "MUKESH KUMAR CHOUDHARY", "father_name" => "GYARSHI LAL CHOUDHARY", "mother_name" => "SURGYAN DEVI", "dob" => "1999-06-03", "mo_no" => "", "address" => ""],
+      ["sr_no" => 41, "student_name" => "RINKU SAINI", "father_name" => "RAMSWAROOP SAINI", "mother_name" => "KAUSHALYA DEVI", "dob" => "2003-07-16", "mo_no" => "", "address" => ""],
+      ["sr_no" => 42, "student_name" => "RAO VIJAY YADAV", "father_name" => "RAMJI LAL YADAV", "mother_name" => "LALTESH YADAV", "dob" => "1997-05-18", "mo_no" => "", "address" => ""],
+      ["sr_no" => 43, "student_name" => "ROSHAN KUMAR PRAJAPAT", "father_name" => "SITA RAM PRAJAPAT", "mother_name" => "SUMITRA DEVI", "dob" => "1998-07-05", "mo_no" => "", "address" => ""],
+      ["sr_no" => 44, "student_name" => "NIKITA SAINI", "father_name" => "BAJRANG LAL SAINI", "mother_name" => "GUDI DEVI", "dob" => "2004-07-12", "mo_no" => "", "address" => ""],
+      ["sr_no" => 45, "student_name" => "KIRAN SHARMA", "father_name" => "SURESH KUMAR SHARMA", "mother_name" => "LALI DEVI", "dob" => "1997-09-01", "mo_no" => "", "address" => ""],
+      ["sr_no" => 46, "student_name" => "MURLIDHAR SHARMA", "father_name" => "RAMCHARAN SHARMA", "mother_name" => "LALITA SHARMA", "dob" => "2000-08-10", "mo_no" => "", "address" => ""],
+      ["sr_no" => 47, "student_name" => "HARSHITA SAINI", "father_name" => "SANTOSH SAINI", "mother_name" => "", "dob" => "", "mo_no" => "", "address" => ""],
+      ["sr_no" => 48, "student_name" => "SURESH CHOUDHARY", "father_name" => "LAXMI NARAYAN CHOUDHARY", "mother_name" => "PREM DEVI", "dob" => "1998-08-16", "mo_no" => "", "address" => ""],
+      ["sr_no" => 49, "student_name" => "ROHIT CHOUDHARY", "father_name" => "MOTI LAL CHOUDHARY", "mother_name" => "RAJANA DEVI", "dob" => "1998-06-04", "mo_no" => " ", "address" => ""],
+      ["sr_no" => 50, "student_name" => "JITENDRA KUMAR TAILOR", "father_name" => "GOPAL LAL TAILOR", "mother_name" => "KAILASH DEVI TAILOR", "dob" => "1998-06-22", "mo_no" => "", "address" => ""],
+      ["sr_no" => 51, "student_name" => "UMESH CHOUDHARY", "father_name" => "PRABHU CHOUDHARY", "mother_name" => "KAMLI DEVI", "dob" => "2006-07-07", "mo_no" => "", "address" => ""],
+      ["sr_no" => 52, "student_name" => "KAMLESH JAT", "father_name" => "LAXMAN JAT", "mother_name" => "SANTOSH DEVI", "dob" => "1999-07-03", "mo_no" => "", "address" => ""],
+      ["sr_no" => 53, "student_name" => "SUNIL CHOUIDHARY", "father_name" => "RAM NARAYAN CHOUDHARY", "mother_name" => "RAMESHWARI", "dob" => "1996-10-02", "mo_no" => "", "address" => ""],
+      ["sr_no" => 54, "student_name" => "NEERAJ CHOUDHARY", "father_name" => "RAMSWAROOP CHOUDHARY", "mother_name" => "SANTRA DEVI", "dob" => "1994-05-04", "mo_no" => "", "address" => ""],
+      ["sr_no" => 55, "student_name" => "SOURABH SHARMA", "father_name" => "BANWARI LAL SHARMA", "mother_name" => "LAXMI SHARMA", "dob" => "1999-12-20", "mo_no" => "", "address" => ""],
+      ["sr_no" => 56, "student_name" => "VAKEEL KUMAR JAT", "father_name" => "SHIV RAJ JAT", "mother_name" => "SITA DEVI", "dob" => "1994-06-25", "mo_no" => "8432541645", "address" => ""],
+      ["sr_no" => 57, "student_name" => "MUKESH CHOUDHARY", "father_name" => "BABU LAL CHOUDHARY", "mother_name" => "NANA DEVI", "dob" => "1994-06-18", "mo_no" => "8432541645", "address" => ""],
+      ["sr_no" => 58, "student_name" => "VIKAS KUMAR SAINI", "father_name" => "HARI NARAYAN SAINI", "mother_name" => "GANGA DEVI", "dob" => "1999-08-18", "mo_no" => "7014320902", "address" => ""],
+      ["sr_no" => 59, "student_name" => "KRISHAN KUMAR YADAV", "father_name" => "SHRIRAM YADAV", "mother_name" => "KALLI DEVI", "dob" => "1994-03-02", "mo_no" => "", "address" => ""],
+      ["sr_no" => 60, "student_name" => "SHYAM LAL YADAV", "father_name" => "DATA RAM YADAV", "mother_name" => "ANARI DEVI", "dob" => "1992-12-25", "mo_no" => "", "address" => ""],
+      ["sr_no" => 61, "student_name" => "POOJA", "father_name" => "SATYA NARAYAN", "mother_name" => "", "dob" => "", "mo_no" => "", "address" => ""],
+    ];
+
+
+
+    $formattedData = [];
+    $error = [];
+    $lastEnroll = $this->Students->find('all')->select(['enroll'])->order(['enroll' => 'DESC'])->first();
+    $enroll = (!empty($lastEnroll)) ? $lastEnroll['enroll'] + 1 : 1001;
+
+
+    foreach ($dataArr as $row) {
+    $formattedRow = [];
+    $formattedRow['enroll'] = $enroll++;
+    
+    // Yahan hum check kar rahe hain: agar value khali hai toh 'N/A' set kar do
+    $formattedRow['fname'] = !empty(trim($row['student_name'])) ? trim($row['student_name']) : 'N/A';
+    $formattedRow['st_full_name'] = !empty(trim($row['student_name'])) ? trim($row['student_name']) : 'N/A';
+    $formattedRow['fathername'] = !empty(trim($row['father_name'])) ? trim($row['father_name']) : 'N/A';
+    $formattedRow['mothername'] = !empty(trim($row['mother_name'])) ? trim($row['mother_name']) : 'N/A';
+    
+    // Date of Birth ke liye N/A ki jagah koi valid default date ya null rakhein (DB requirement ke hisaab se)
+    // Kyunki Date field me 'N/A' string nahi ja sakti.
+    $formattedRow['dob'] = !empty($row['dob']) ? date('Y-m-d', strtotime($row['dob'])) : '1900-01-01'; 
+    
+    $formattedRow['mobile'] = !empty(trim($row['mo_no'])) ? trim($row['mo_no']) : '000';
+    $formattedRow['address'] = !empty(trim($row['address'])) ? trim($row['address']) : 'N/A';
+
+    // Baki mandatory fields
+    $formattedRow['class_id'] = 19;
+    $formattedRow['section_id'] = 1;
+    $formattedRow['batch'] = '2024-25';
+    $formattedRow['session'] = '2024-25';
+    $formattedRow['admission_date'] = date('Y-m-d');
+    $formattedRow['acedmicyear'] = $adminData['academic_year'] ?? '2024';
+    $formattedRow['status'] = 'Y';
+    $formattedRow['board_id'] = 4;
+
+    // Ab validate karne ki zaroorat nahi padegi kyunki humne 'N/A' bhar diya hai
+    $formattedData[] = $formattedRow;
+}
+
+
+    try {
+      foreach ($formattedData as $studentDetails) {
+        $newApplicant = $this->Students->newEntity();
+        $setData = $this->Students->patchEntity($newApplicant, $studentDetails);
+        $this->Students->save($setData);
+      }
+
+      $this->Flash->success(__('Total ' . count($formattedData) . ' students imported successfully from array.'));
+    } catch (\Exception $e) {
+      // $connection->rollback();
+      $this->Flash->error(__('Import failed: ' . $e->getMessage()));
+    }
+  }
+
+  function validateRequiredFields(array $data): bool
+  {
+    // Sirf wahi fields rakhen jo Database level par NOT NULL hain aur jinme 'N/A' nahi daal sakte (ids)
+    $requiredFields = ['class_id', 'section_id', 'board_id'];
+
+    foreach ($requiredFields as $field) {
+      if (empty($data[$field])) {
+        return false;
+      }
+    }
+    return true;
   }
 }
